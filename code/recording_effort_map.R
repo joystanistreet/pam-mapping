@@ -29,6 +29,9 @@ library(ggspatial)
 # projects to leave out
 omit_project <- c('OPP-MEQ Coastal Monitoring', 'Kenchington PAM Landers')
 
+# stations to leave out
+omit_station <- c('ROBE')
+
 #--------------------------------------
 
 # Compile recording effort summary
@@ -59,7 +62,8 @@ effort_summary <- depl %>%
   mutate(rec_days = as.numeric(sum(n_days, na.rm = T))) %>%
   transmute(station, latitude, longitude, rec_days) %>%
   distinct() %>%
-  ungroup ()
+  ungroup () %>%
+  filter(!station %in% omit_station)
 
 #--------------------------------------
 
