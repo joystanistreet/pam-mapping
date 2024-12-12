@@ -27,10 +27,10 @@ library(ggspatial)
 # Set options
 
 # projects to leave out
-omit_project <- c('OPP-MEQ Coastal Monitoring', 'Kenchington PAM Landers')
+omit_project <- c('OPP-MEQ Coastal Monitoring')
 
 # stations to leave out
-omit_station <- c('ROBE')
+omit_station <- c('ROBE', 'SABV', 'SBSM', 'GLNE', 'GLSW')
 
 #--------------------------------------
 
@@ -43,10 +43,13 @@ metadata <- 'R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_2/PAM_metadata'
 depl <- read_csv(here(metadata, 'deployment_summary.csv'))
 
 # load station table
-stations <- read_csv(here(metadata, 'mooring_stations.csv')) %>%
-  transmute(station = Station,
-         latitude = Lat,
-         longitude = Lon)
+stations <- read_csv(here(metadata, 'station_summary.csv')) %>%
+  transmute(station = Code,
+            Revision,
+            latitude = Latitude,
+            longitude = Longitude) %>%
+  group_by(station) %>%
+  top_n(1, Revision)
 
 # summarize recording effort by station
 effort_summary <- depl %>%
@@ -148,4 +151,4 @@ m<-ggplot() +
         text = element_text(size = 10),
         legend.key = element_rect(fill = NA))
 
-ggsave(here('output_figures', paste0('PAM_effort_map_', Sys.Date(), '.png')), m, width = 10, height = 6, dpi = 300)
+ggsave(here('output_figures', paste0('PAM_effort_map_', Sys.Date(), '.png')), m, width = 7, height = 3.65, dpi = 300)
