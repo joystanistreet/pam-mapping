@@ -13,14 +13,21 @@
 
 # REQUIRED: SET PARAMETERS
 
-# specify filename for output map (.png)
-mapfile = "FCBB_stations.png"
+# specify file name for output map (.png)
+mapfile = "PAM_stations_2012-2025.png"
 
 # select stations to include on map? (TRUE/FALSE)
-select_stations = TRUE
+select_stations = FALSE
+## if TRUE, specify selected stations
+station_select = c("CCU","COC","GBK","FCH","FCM", "FCD","EFC")
 
-# if TRUE, specify selected stations
-station_list = c("CCU","COC","GBK","FCH","FCM", "FCD","EFC")
+# select stations to omit from map? (TRUE/FALSE)
+omit_stations = TRUE
+## if TRUE, specify stations to OMIT
+station_omit = c("GLNE","GLSW", "SAM", "SBVC1","SBVC2","SBVC3")
+
+# add station labels?
+station_labels = TRUE
 
 #--------------------------------------
 
@@ -47,19 +54,27 @@ north_america <- read_sf(here(shapefiles, 'coastline', 'north_america','north_am
   st_transform(crs = 4326)
 
 # path to PAM metadata folder
-metadata <- 'R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_2/PAM_metadata'
+#metadata <- 'R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_2/PAM_metadata'
 
 # load station table
-stations <- read_csv(here(metadata, 'mooring_stations.csv')) %>%
-  transmute(station = Station,
-            latitude = Lat,
-            longitude = Lon)
+stations <- read_csv(here('input_data', 'station_summary.csv')) %>%
+  transmute(station = Code,
+            latitude = Latitude,
+            longitude = Longitude)
 
 # select stations, if needed
 if(select_stations == TRUE){
 
   stations <- stations %>%
-    filter(station %in% station_list)
+    filter(station %in% station_select)
+
+}
+
+# omit stations, if needed
+if(omit_stations == TRUE){
+
+  stations <- stations %>%
+    filter(!station %in% station_omit)
 
 }
 
@@ -96,10 +111,10 @@ pam_map <-ggplot() +
 
   # add recording sites
   geom_point(data = stations, aes(x = longitude, y = latitude),
-             colour = "black", shape = 16, size = 2) +
+             colour = "black", shape = 17, size = 1.5) +
 
   # set map limits
-  coord_sf(xlim = c(-68, -63), ylim = c(40, 44), expand = FALSE) +
+  coord_sf(xlim = c(-69, -55), ylim = c(40, 49), expand = FALSE) +
 
   # format axes
   ylab("") +
@@ -110,4 +125,17 @@ pam_map <-ggplot() +
         legend.key = element_rect(fill = NA),
         plot.margin = margin(0.2,0.1,0.2,0.1,"cm"))
 
-ggsave(here('output_figures', mapfile), pam_map, width = 6.5, height = 5, dpi = 600)
+# add labels if needed
+if(station_labels == TRUE){
+
+  pam_map <- pam_map + geom_text(data = stations,
+                                  aes(x = longitude,
+                                      y = latitude,
+                                      label = station),
+                                      hjust = "left",
+                                      nudge_x = 0.1,
+                                      size = 2,
+                                 color = 'darkred')
+}
+
+ggsave(here('output_figures', mapfile), pam_map, width = 6.5, height = 6, dpi = 600)
